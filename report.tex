@@ -1,0 +1,683 @@
+\documentclass[11pt]{article} %latex2e
+\usepackage{etex}
+\reserveinserts{28} %http://tex.stackexchange.com/questions/38607/no-room-for-a-new-dimen
+
+\usepackage{natbib,caption,hyperref,graphics,pdfcolmk,framed,empheq,mathtools,mdframed,wasysym}
+\usepackage[font=small,format=plain,labelfont=bf,textfont=sf]{caption}
+\usepackage[dvipsnames]{xcolor} % % https://en.wikibooks.org/wiki/LaTeX/Colors#The_68_standard_colors_known_to_dvips
+\usepackage{soul} % highlighting text
+\setstcolor{red} % For \st with soul
+\usepackage{graphicx,wrapfig}
+\usepackage[floatrow]{chemstyle}
+\usepackage[thicklines]{cancel} 
+  \renewcommand{\CancelColor}{\color{red}}
+\usepackage[T1]{fontenc}
+\usepackage{natbib,caption,hyperref,graphics,pdfcolmk,listings,textcomp}
+% %\RequirePackage[hidelinks]{hyperref}
+\hypersetup{
+  colorlinks   = true, %Colours links instead of ugly boxes
+  urlcolor     = blue, %Colour for external hyperlinks
+  linkcolor    = black, %Colour of internal links
+  citecolor   = black %Colour of citations
+}
+
+\setlength{\textwidth}{170mm}
+\setlength{\textheight}{230mm} % WAS 245 BUT NO GOING FANCY
+\setlength{\topmargin}{-20mm}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{3mm}
+\setlength{\oddsidemargin}{0mm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand*\whiteredbox[1]{%
+\setlength{\fboxrule}{1.5pt}     % yes, this works!
+\fcolorbox{red}{white}{\hspace{1em}#1\hspace{1em}}
+}  %#1 is arguement
+ 
+\newcommand*\whitebluebox[1]{%
+\setlength{\fboxrule}{1.5pt}
+\fcolorbox{blue}{white}{\hspace{0.5em}#1\hspace{0.5em}}
+}   
+ 
+\newcommand*\whitegreenbox[1]{%
+\setlength{\fboxrule}{1.5pt}
+\fcolorbox{green}{white}{\hspace{0.5em}#1\hspace{0.5em}}
+}   
+\setlength\fboxsep{0.5cm} %which will increase the space around the formula in all directions
+\renewcommand{\familydefault}{\sfdefault}
+%\usepackage[helvet]{sfmath} 
+\renewcommand{\baselinestretch}{1.2}
+%\pagestyle{headings} 
+
+\def\lapp{\ifmmode\stackrel{<}{_{\sim}}\else$\stackrel{<}{_{\sim}}$\fi}
+\def\gapp{\ifmmode\stackrel{>}{_{\sim}}\else$\stackrel{>}{_{\sim}}$\fi}
+
+\setlength{\footskip}{25pt} 
+\setlength{\fboxrule}{2pt}
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
+
+% https://tex.stackexchange.com/questions/132783/how-to-write-checkmark-in-latex
+\usepackage{amssymb} %TICKS
+
+%%%%%%%%%%% GETTING FANCY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\linespread{1.5} %regulate line spacing
+\usepackage{fancyhdr}
+\setlength{\headheight}{55pt}
+\renewcommand{\headrulewidth}{2pt}% 2pt header rule
+\renewcommand{\headrule}{\hbox to\headwidth{%
+    \color{Blue}\leaders\hrule height \headrulewidth\hfill}     
+}
+
+\usepackage{titlesec} % coloured section headings and better spacing
+\titleformat{\section}{\normalfont\bfseries}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{*0}{0pt}
+\titleformat{\section}
+{\color{Plum}\normalfont\Large\bfseries}
+{\color{Plum}\thesection}{1em}{}
+\titleformat{\subsection}
+%{\color{Plum}\normalfont\large}
+{\color{BlueViolet}\normalfont\large\bfseries}
+{\color{BlueViolet}\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+{\color{BlueViolet}\normalfont\normalsize\bfseries}
+{\color{BlueViolet}\thesubsubsection}{1em}{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+
+%\vspace*{3cm}
+\Large
+\begin{center}
+\setlength{\fboxrule}{1.5pt} 
+\fcolorbox{blue}{white}{\textbf{\textit{Machine Learning Prediction of Money Laundering Customers}}}\\
+\end{center}
+%\vspace{1cm}
+\large
+
+\begin{center}
+  {\bf S. J. Curran}
+  %\date
+\end{center}
+
+\vspace{1cm}
+\normalsize
+
+%}}
+
+%\vspace{3cm}
+\normalsize
+
+\begin{center}
+\section*{Summary}
+\end{center}
+
+We present a machine learning model which our client, an online gambling platform, can use to detect customers (players)
+using their infrastructure to launder money. Although we are limited to a sample
+containing only 1752 suspect players, we
+report a mean accuracy of 81\% in the prediction of a player engaging in suspect activity. The model requires
+only seven of the 17 available features, potentially increasing its applicability
+to more players, as well as possibly providing a much larger training sample which could increase the model accuracy.
+%\newpage
+\small
+
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+\normalsize
+
+\pagestyle{fancy}
+\lhead{{\color{Blue}\fancyplain{}\em Suspected Money Laundering Players}}
+\fancyfoot{}
+\fancyfoot[R]{\thepage} 
+\pagenumbering{arabic} 
+%\renewcommand\thepage{\romannumeral\numexpr\value{page}-1\relax} % NUMBER AFTER CONTENTS
+
+\section{Introduction}
+
+The client, an online gambling platform, requires a machine learning model with which to detect customers (players)
+who use the client's infrastructure for laundering money through apparent gambling activities.
+The findings are summarised above, with the following report containing the specific details
+regarding the building of the model.
+
+\section{Analysis}
+
+\subsection{Pre-processing}
+
+\subsubsection{The data}
+
+The client has supplied five datasets:
+\begin{enumerate}
+\item {\tt details.csv} -- the 207\,398 players’ basic details. The file is known to have formatting issues.
+
+\item {\tt payments.csv} -- the payment activities of the players over the last 30 days.
+
+\item {\tt profiling.csv} -- additional information regarding the players' activity over the same period. 
+
+\item {\tt suspect.csv} -- a list of 1752 players already flagged for suspect activity.
+
+\end{enumerate}
+
+The fields are (in order of appearance):
+\begin{tabbing}
+{\tt ID} ~~~~~~~~  ~~~~~~~~  ~~~~~~~~  ~~~~~~~~  ~~~~~~~~ \= the unique ID of the player\\
+{\tt Life\_Time} \> how many years the player has been a client \\ 
+{\tt Age} \> the client's age in years\\
+{\tt Is\_Retail} \> whether the player is also a retailer\\
+{\tt Is\_CRM\_Email} \> whether the player has been contacted by us \\
+%\>  ~~~ by the Customer Relationship Management team\\
+{\tt CountDeposit} \> number of deposits\\
+{\tt CountWithdrawal} \> number of withdrawals\\
+{\tt TotalDeposits} \> value of deposits\\
+{\tt TotalWithdrawal} \> value of withdrawals\\
+{\tt CountPaymentMethod} \> number of different deposit/withdrawal methods \\
+{\tt DifferentMethodWithdrawals} \> value of different deposit/withdrawal methods \\
+{\tt Multi\_Device} \> 0 flags $<3$ devices and  1 flags $\geq3$ devices used for payment\\
+{\tt IP\_Counts} \> number of different IP addresses used for transactions\\
+{\tt e\_11234, e\_23456, e\_34454}\> aggregated variables describing the players' activity\\
+~~~~~~~~~~~~~~~~~~{\tt e\_43568, e\_64645} \> \\
+\end{tabbing}
+
+\subsubsection{First look at the data}
+
+Using {\tt pre-process.py}, we see that {\tt details.csv} does indeed have formatting issues:
+
+\small
+{\color{blue}
+\begin{verbatim}
+                                ID|Life_Time|Age|Is_Retail|Is_CRM_Email
+NaN db=123 | 25 | 100001096=id     | | 1 )| | | 33 | | )| 1 | | | 0 | 
+    db=123 | 25 | 100002057=id     | | 1 )| | | 44 | | )| 0 | | | 0 | 
+ ...                                                                ...
+    db=123 | 25 | 899994603=id     | | 3 )| | | 35 | | )| 0 | | | 0 | 
+    db=123 | 25 | 899998254=id     | | 0 )| | | 39 | | )| 0 | | | 0 | 
+[207398 rows x 1 columns]
+\end{verbatim}
+}
+\normalsize
+This was easily fixed in the {\tt emacs} editor\footnote{Command line methods such as {\tt sed}, {\tt awk}, etc.
+  could also have been used.} and saved as {\tt details\_fixed.csv}
+
+\small
+{\color{blue}
+\begin{verbatim}
+               ID  Life_Time  Age  Is_Retail  Is_CRM_Email
+0       100001096          1   33          1             0
+1       100002057          1   44          0             0
+...           ...        ...  ...        ...           ...
+207396  899994603          3   35          0             0
+207397  899998254          0   39          0             0
+
+[207398 rows x 5 columns]
+                 ID      Life_Time            Age      Is_Retail   Is_CRM_Email
+count  2.073980e+05  207398.000000  207398.000000  207398.000000  207398.000000
+mean   5.008909e+08       2.603342      41.490410       0.410023       0.418042
+std    2.306288e+08       3.122641      13.123745       0.491839       0.493238
+min    1.000011e+08       0.000000      18.000000       0.000000       0.000000
+max    8.999983e+08      21.000000     120.000000       1.000000       1.000000
+\end{verbatim}
+}
+\normalsize
+
+Looking at {\tt payments.csv},
+\small
+{\color{blue}
+\begin{verbatim}
+               ID  CountDeposit  ...  CountPaymentMethod  DifferentMethodWithdrawals
+0       100001096            86  ...                   1                      2359.8
+1       100002057            26  ...                   1                         0.0
+...           ...           ...  ...                 ...                         ...
+
+207396  899994603             1  ...                   1                         0.0
+207397  899998254             5  ...                   1                         0.0
+\end{verbatim}
+}
+\normalsize
+this has the customer ID ({\tt ID}) in common with {\tt details.csv}, as does {\tt profiling.csv}.
+\newpage
+\small
+{\color{blue}
+\begin{verbatim} 
+               ID  Multi_Device  IP_Counts   e_11234   e_23456   e_34454   e_43568  e_64645
+0       100001096             1          3   5599.89    986.36    283.05    662.98     0.40
+1       100002057             1          1   9669.93  17181.08  20905.39  38635.13     3.22
+...           ...           ...        ...       ...       ...       ...       ...      ...
+207396  899994603             1          2   7522.49  16485.09  37475.16  37475.16     3.15
+207397  899998254             1          1   9229.69   3589.55    578.35  31473.88     1.22
+\end{verbatim}
+}
+\normalsize
+
+We therefore merged these datasets by {\tt ID} and checking the merged data we find no missing values.
+\small
+{\color{blue}
+\begin{verbatim} 
+             Life_Time            Age  ...        e_34454        e_43568        e_64645
+count    207398.000000  207398.000000  ...  207398.000000  207398.000000  207398.000000
+mean          2.603342      41.490410  ...   14666.698999   18722.672481       1.516427
+std           3.122641      13.123745  ...   13152.810961   15426.545697       1.101400
+min           0.000000      18.000000  ...       0.000000       0.000000       0.000000
+25%           0.000000      31.000000  ...    3454.317500    3320.920000       0.490000
+50%           1.000000      39.000000  ...   10207.420000   14811.630000       1.350000
+75%           4.000000      51.000000  ...   25097.677500   34063.392500       2.670000
+max          21.000000     120.000000  ...   70086.760000   56891.910000       4.310000
+[8 rows x 18 columns]
+\end{verbatim}
+}
+\normalsize
+
+
+Finally, looking at {\tt suspect.csv}, this only contains only two fields,
+the player ID and a positive flag ({\tt Target\_ml} = 1) for suspected laundering activity.
+\small
+{\color{blue}
+\begin{verbatim} 
+                 ID  Target_ml
+count  1.752000e+03     1752.0
+mean   4.995049e+08        1.0
+std    2.322098e+08        0.0
+min    1.000955e+08        1.0
+max    8.997882e+08        1.0
+\end{verbatim}
+}
+\normalsize
+All 1752 of these players were also in the merged file, which was absent a suspect activity flag.
+These flags were added to
+the merged file and, assuming that the $207\,389-1752 = 205\,637$
+remaining players are non-suspect, we flagged these as {\tt Target\_ml} = 0.
+\small
+{\color{blue}
+\begin{verbatim}
+               ID  Life_Time  Age     ...   e_23456   e_34454   e_43568  e_64645  Target_ml
+0       100001096          1   33     ...    986.36    283.05    662.98     0.40          0
+1       100002057          1   44     ...  17181.08  20905.39  38635.13     3.22          0
+...           ...        ...  ...     ...       ...       ...       ...      ...        ...
+207396  899994603          3   35     ...  16485.09  37475.16  37475.16     3.15          0
+207397  899998254          0   39     ...   3589.55    578.35  31473.88     1.22          0
+
+[207398 rows x 19 columns]
+
+             Life_Time            Age  ...        e_43568        e_64645      Target_ml
+count    207398.000000  207398.000000  ...  207398.000000  207398.000000  207398.000000
+mean          2.603342      41.490410  ...   18722.672481       1.516427       0.008448
+std           3.122641      13.123745  ...   15426.545697       1.101400       0.091522
+min           0.000000      18.000000  ...       0.000000       0.000000       0.000000
+max          21.000000     120.000000  ...   56891.910000       4.310000       1.000000
+\end{verbatim}
+}
+\normalsize
+We then save these data to  {\tt all\_data.csv} to be used in the machine learning.
+
+\subsubsection{Distributions}
+
+In order to eyeball any obvious differences between the suspect and non-suspect players, we
+plot the distributions of the non-binary features.
+
+
+  \includegraphics[angle=0,scale=0.52]{media/histo_Life_Time.eps}
+  \includegraphics[angle=0,scale=0.52]{media/histo_Age.eps}
+
+  \includegraphics[angle=0,scale=0.52]{media/histo_CountDeposit.eps}
+  \includegraphics[angle=0,scale=0.52]{media/histo_CountWithdrawal.eps}
+
+  From these we see that the suspect players features (red histograms) mostly
+  overlap with the non-suspect plays (black histograms), demonstrating that
+  these would be difficult to distinguish from one another based the distributions alone.
+  Note also that some of the non-suspect players are suspiciously long-lived.
+
+  
+  \includegraphics[angle=0,scale=0.52]{media/histo_TotalDeposits.eps}
+  \includegraphics[angle=0,scale=0.52]{media/histo_TotalWithdrawal.eps}
+
+  \includegraphics[angle=0,scale=0.52]{media/histo_CountPaymentMethod.eps}
+  \includegraphics[angle=0,scale=0.52]{media/histo_DifferentMethodWithdrawals.eps}
+
+  \includegraphics[angle=0,scale=0.52]{media/histo_IP_Counts.eps}
+ \includegraphics[angle=0,scale=0.52]{media/histo_e_11234.eps}
+
+ \includegraphics[angle=0,scale=0.52]{media/histo_e_23456.eps}
+ \includegraphics[angle=0,scale=0.52]{media/histo_e_34454.eps}
+
+ \includegraphics[angle=0,scale=0.52]{media/histo_e_43568.eps}
+\includegraphics[angle=0,scale=0.52]{media/histo_e_64645.eps}
+
+\subsection{Machine Learning}
+
+\subsubsection{Initial models and tests}
+\label{moii}
+
+In {\tt ML.py} we initially test four types of common, but different, ML classifiers:
+\begin{enumerate}
+\item {\em Logistic Regression} (LR): This is analogous to multi-variable linear regression,
+  but instead of a fit yields a binary result. Thus, it is particularly suited to this problem
+  where we are classifying a player as suspect or not. The algorithm compresses a
+  linear combination of several variables (features) with a logistics sigmoid to
+ yield a value of between 0 and 1. For the binary model, the prediction is labelled with one of these two end values,
+ depending upon its probability ($0\rightarrow1$), or odds ($0\rightarrow\infty$)
+
+\item {\em k-Nearest Neighbour} (kNN): This  algorithm maps the variables to a feature space and then compares
+the Euclidean distance between a test point and its $k$ nearest neighbours. It then assigns a
+weighted combination of the target values with the nearest neighbours in order to place the test
+object in a group. The kNN algorithm is relatively computationally expensive and, like logistic
+regression, is sensitive to outliers. A further disadvantage is that irrelevant features can lead the
+learning astray.
+
+\item {\em Support Vector Classifier} (SVC): This constructs a hyperplane in a high dimensional space in order to perform classification,
+regression and outlier detection. 
+Support vectors are points that reside closest to the hyperplane and 
+in binary classification the training maximises the distance between the two categories. Further data are
+transformed into the same space and assigned a category based upon where in the space the are located.
+Although the support vector machine classifier is computationally fast, it is not suitable 
+for noisy data (overlapping features) nor large data sets.
+
+\item {\em Decision Tree Classifier} (DTC): Like the other algorithms, decision trees can be used for both classification and regression.  The algorithm builds a
+classification model based upon a tree structure, which branches the data-set (top node) into smaller subsets (child
+nodes), according to a predefined decision boundary.  With one node on either side of the boundary, the process is
+iterated through further branching until a predefined stopping criterion in reached. DTC has the advantage that it is
+not as sensitive to outliers as some of the other algorithms, although the tree choices can be biased due to the
+sequential nature of the algorithm.  Over-fitting can also be a problem, which can be mitigated by limiting the maximum
+tree depth.
+\end{enumerate}
+
+As stated above, there are only 1752 suspect players and so from raw statistics alone we can ascertain that
+there is a probability of $100\times1752/207\,389 = 0.84$\% of the player being suspect.
+In order to prevent the ML blindly yielding an apparent $100 - 0.84 \approx 99$\% accuracy from probability alone, 
+we randomly selected 1752 of the remaining 205\,637 non-suspect players for the binary testing.
+
+Training on 80\% of the $2\times1752$ strong sample (2803 players) and testing on the other 20\% (701), using the default
+values of the algorithms, we obtain the following cross-validation scores (in percent).
+\small
+{\color{blue}
+\begin{verbatim}
+For a 0.2 test fraction (2803 train & 701 test) LR score = 76.597
+For a 0.2 test fraction (2803 train & 701 test) KNN score = 78.880
+For a 0.2 test fraction (2803 train & 701 test) SVC score = 81.662
+For a 0.2 test fraction (2803 train & 701 test) DTR score = 80.448
+\end{verbatim}
+\normalsize
+}
+
+\subsubsection{Model optimisation}
+\label{mo}
+
+We then optimise each of the models via:
+\begin{itemize}
+\item {\em Logistic regression} -- using {\tt sklearn GridSearchCV} giving {\tt LR.py}\footnote{Warning, this takes a while!}, 
+  {\tt C=0.004833}, {\tt solver='newton-cg'}.
+  
+\item {\em Support Vector Classifier} -- using {\tt sklearn GridSearchCV} giving {\tt SVC.py}, {\tt C=1, gamma=0.1}.
+
+\item {\em k-Nearest Neighbour} \& {\em Decision Tree Classifier} -- we iterated the number of nearest neighbours and
+  maximum depths, giving {\tt n\_neighbors} = 17 and {\tt max\_depth} = 6, respectively.
+  \end{itemize}
+
+\includegraphics[angle=0,scale=0.55]{media/kNN-results.eps}
+\includegraphics[angle=0,scale=0.55]{media/DTC-results.eps}
+
+Re-running {\tt ML.py} with these parameters we obtain
+\small
+{\color{blue}
+\begin{verbatim}
+For a 0.2 test fraction (2803 train & 701 test) LR score = 76.026
+For a 0.2 test fraction (2803 train & 701 test) KNN score = 79.987
+For a 0.2 test fraction (2803 train & 701 test) SVC score = 81.485
+For a 0.2 test fraction (2803 train & 701 test) DTR score = 80.450
+\end{verbatim}
+\normalsize
+}
+indicating that the ``default'' values were close to optimal and that SVC is the best model.
+%However, due to the small sample size, these numbers can vary a lot in relative terms between runs.
+%(although essentially unchanged, see Sect.~\ref{}). 
+
+Below we show the confusion matrix for the run of the SVC algorithm.
+
+\begin{tabular}{@{}l  cccc  @{}}
+                  & \multicolumn{2}{c}{\bf Predicted training} & \multicolumn{2}{c}{\bf Predicted validation} \\
+                  & {\bf Suspect} & {\bf Non-suspect} & {\bf Suspect} & {\bf Non-suspect}\\
+{\bf Actual suspect} & 1372 & 410 & 321 & 109 \\
+{\bf Actual non-suspect} & 42 & 979 & 17 & 254 \\
+\end{tabular}
+
+The validation data yield 321 true positives (suspect) and 254 true negatives (non-suspect),
+compared to 17 false positives 
+and 109 false negatives. This gives a test score of (321 + 254)/(321 + 254 + 17 + 109) = 0.82, the cross-validation score.
+
+However, as above, these tests are based upon a single instance of the
+models and, given the small sample, could be subject to the choice of the 1752 non-suspect players.
+Using {\tt ML-loop.py} we run 1000 trials randomising the sample of non-suspect players from the pool of
+205\,646 each time.\footnote{From 207\,398 total minus the 1752 suspect players.}
+
+Summarising the results in the histograms below, we see
+that the SVC algorithm performs best with a mean cross-validation
+score of $81.23\pm0.46$\%.
+
+\includegraphics[angle=0,scale=0.65]{media/ML_loops=1000.csv.eps}
+
+\subsubsection{Feature importance}
+\label{fi}
+
+Below, from {\tt ML.py}, we show the feature importance for each algorithm in
+descending order from a single run.
+\small
+{\color{blue}
+\begin{verbatim}
+ LogisiticRegression score = 76.524         Support Vector Classifier score = 81.55
+                    Feature  Importance                         Feature  Importance
+         CountPaymentMethod    0.053086                         e_23456    0.067499
+                    e_64645    0.024331                         e_64645    0.055369
+                    e_43568    0.022975                         e_43568    0.051445
+                  IP_Counts    0.016625                       IP_Counts    0.017838
+                    e_23456    0.010275                       Is_Retail    0.017339
+                    e_34454    0.009989                         e_34454    0.016768
+                  Is_Retail    0.006136              CountPaymentMethod    0.015912
+ DifferentMethodWithdrawals    0.005066      DifferentMethodWithdrawals    0.012986
+               Multi_Device    0.003568                         e_11234    0.012772
+                  Life_Time    0.003211                       Life_Time    0.011559
+               CountDeposit    0.001570                   TotalDeposits    0.010917
+            CountWithdrawal    0.001284                    CountDeposit    0.008919
+                    e_11234    0.000357                 TotalWithdrawal    0.008205
+               Is_CRM_Email    0.000214                 CountWithdrawal    0.006778
+                        Age    0.000143                    Multi_Device    0.006422
+              TotalDeposits   -0.000571                    Is_CRM_Email    0.005351
+            TotalWithdrawal   -0.001070                             Age    0.005351
+                                            
+ KNearest score = 78.843                      DecisionTreeClassifier score = 78.701  
+                    Feature  Importance                         Feature  Importance
+                    e_64645    0.043453                 CountWithdrawal    0.231038
+                    e_23456    0.038673                   TotalDeposits    0.140564
+                    e_43568    0.035391      DifferentMethodWithdrawals    0.070781
+         CountPaymentMethod    0.026543                    CountDeposit    0.068783
+                  Is_Retail    0.026258                         e_23456    0.048519
+                    e_11234    0.016054                         e_64645    0.040314
+                    e_34454    0.014413                       IP_Counts    0.022333
+                  IP_Counts    0.012558                         e_43568    0.020407
+               Is_CRM_Email    0.009704                 TotalWithdrawal    0.018480
+                        Age    0.009633                         e_34454    0.012130
+               Multi_Device    0.008348                       Life_Time    0.010560
+                  Life_Time    0.008063                         e_11234    0.001998
+               CountDeposit    0.005280                             Age    0.000999
+            CountWithdrawal    0.003068                    Is_CRM_Email    0.000999
+              TotalDeposits    0.002426                    Multi_Device    0.000000
+            TotalWithdrawal    0.001927                       Is_Retail    0.000000
+ DifferentMethodWithdrawals    0.001213              CountPaymentMethod    0.000000
+\end{verbatim}
+\normalsize
+}
+% rename 's/ML_1/ML/g' *
+These were found to be roughly consistent, although there was some variation between different runs.
+Focusing on the best performing (SVC) algorithm, we found that the score remained
+above 80\% if we retained only the top seven features. Therefore, we test each classifier with only
+the seven most important features listed for each one above.
+
+The results are summarised in the following table, 
+ \small
+ \begin{table}
+   {\setlength{\tabcolsep}{3pt} % NARROW COLUMN SPACING
+  \begin{tabular}{l | c c c c c r}
+    \hline
+{\bf Feature}                      & \multicolumn{4}{c}{\bf Top Seven Classifier Features}  &      {\bf Number of} \\  
+                                    & {\bf LR}   & {\bf SVC}   & {\bf kNN} & {\bf DTC}    & {\bf Occurrences}      \\
+\hline
+{\tt e\_11234}                     &            &             & \checkmark    &            & 1 \\
+{\tt e\_23456}                     & \checkmark & \checkmark  & \checkmark    &            & 3\\            
+{\tt e\_34454}                     & \checkmark & \checkmark  &  \checkmark   &            & 3\\ 
+{\tt e\_43568}                     & \checkmark & \checkmark  & \checkmark    &            & 3\\
+{\tt e\_64645}                     & \checkmark & \checkmark  & \checkmark    &  \checkmark& 4\\
+{\tt CountDeposit}                 &            &             &               & \checkmark & 1\\
+{\tt CountPaymentMethod}           &\checkmark  & \checkmark  & \checkmark    &            & 3 \\
+{\tt CountWithdrawal}              &            &             &               & \checkmark & 1\\
+{\tt DifferentMethodWithdrawals}   & \checkmark &             &               & \checkmark & 2\\
+{\tt Is\_Retail}                   & \checkmark & \checkmark  & \checkmark    &            & 3\\    
+{\tt IP\_Counts}                   &            & \checkmark  &                & \checkmark & 2\\
+{\tt TotalDeposits}                &            &             &                 & \checkmark & 1 \\
+\hline
+{\bf Classifier mean score [\%]}                  &            &              &               &   & {\bf All features}    \\
+\hline
+LR                 &    $74.95\pm0.62$        &   $74.92\pm0.62$     &  $74.93\pm0.61$  & $72.01\pm0.70$  & $76.07\pm0.58$\\
+SVC                   & $80.34\pm0.46$            &  $80.33\pm0.45$   & $80.47\pm0.45$  & $79.51\pm0.47$  & \hl{$81.23\pm0.46$}\\
+kNN                  & \hl{$80.44\pm0.52$}            & \hl{$80.41\pm0.52$}  &  \hl{$81.04\pm0.47$} & $78.60\pm0.57$ & $78.92\pm0.55$ \\
+DTC                  &   $78.68\pm0.68$          &  $78.71\pm0.65$   &  $78.55\pm0.65$   & \hl{$79.72\pm0.64$}  & $79.86\pm0.71$ \\
+\hline
+  \end{tabular}
+  }
+ \end{table}  
+\normalsize where we see the top features are similar between the LR, SVC and kNN classifiers, with
+only {\tt e\_64645} being common to all.  Bear in mind, however, this is based on the single run
+shown above. Again, running 1000 trials, where we run {\em all} top seven classifier features for
+each one ({\tt ML-loop\_feat.py}), we see that the results are largely insensitive to the choice of
+the seven features, suggesting that the most important features are a subset of those above.
+
+We also see that the LR classifier remains the worst performing for these data, in addition to  a
+marked improvement in the kNN performance.  In fact, from the highlighted values, we see that this
+is the best performer for the LR, SVC and kNN features.  As was noted in Sect.~\ref{moii}, the
+effectiveness of the kNN algorithm is susceptible to irrelevant features which may be what we are seeing
+here.
+
+\subsection{Deep Learning}
+
+Although, due to having only 1752 suspect players available for testing, the sample is likely too
+small to yield reliable predictions from a deep learning algorithm, we nevertheless test this in
+case any further insight can be gained.
+
+In {\tt DL.py} we use {\sf TensorFlow}, with the testing of various hyper-parameters giving the best results with two
+{\em ReLu} layers comprising $\approx50$ neurons each. 
+
+\begin{minipage}[l]{0.40\linewidth}
+
+ In order to get an accurate representation of the results, in {\tt DL-loop.py} we run the deep
+ learning algorithm 100 times using all of features as well as the top seven for the kNN
+ classifications (see above). From this we see that, although the means of the scores are similar to
+ the machine learning models, the spreads are significantly wider, meaning that relying on this deep
+ learning model carries a significant risk of being much less accurate than the machine learning.
+  \end{minipage}\hfill
+\begin{minipage}[l]{0.55\linewidth}
+ \includegraphics[angle=0,scale=0.6]{media/DL_histos.eps}
+  
+\end{minipage}
+
+%\newpage
+\section{Discussion}
+
+%\subsection{Results}
+ We summarise the steps taken in the flow diagram below.
+
+\begin{minipage}[l]{0.5\linewidth}
+\includegraphics[angle=0,scale=0.4]{steps.eps}
+\end{minipage}\hfill
+\begin{minipage}[l]{0.45\linewidth}
+ 
+  \begin{itemize}
+
+  \item In {\tt pre-process.py} we combine the players details ({\tt details\_fixed.csv}) with their
+    payment activities ({\tt payments.csv}) and other additional information ({\tt
+      profiling.csv}). Using {\tt suspect.csv} we then flag those with known suspect activity.
+
+  \item In {\tt ML.py} we select the 1752 suspect players in addition to a random sample of 1752
+    non-suspect. Four different classification algorithms are tested on the sample of 3504 and then
+    optimised.
+
+  \item Selecting such a relatively small number of non-suspects from a pool of 205\,646 may lead to
+    a single trial being unrepresentative. Therefore, in {\tt ML-loop.py} we randomise the selection
+    of the 1752 non-suspect players and re-run the algorithm. After 1000 runs, we find the Support
+    Vector Classifier to be the best performer with a mean score of $81.23\pm0.46$\%.
+    \end{itemize}
+\end{minipage}
+\begin{itemize}
+\item Finally, we look at the relative importance of each feature and find that retaining only the
+  seven most important has little detrimental effect. In the case of the kNN classifier the
+  performance reaches the same level as the full 17 feature SVC classifier.
+   \end{itemize}
+
+Note that the requirement of only seven features has the potential to vastly increase the sample
+sizes and number of players which can be tested for likely money laundering.\footnote{The SVC and
+kNN models, which use the top seven kNN features, have been saved in {\tt KNN-0.818.pickle} and {\tt
+  SVC-0.812.pickle}, which as the names suggest, have training scores of 81.8\% and 81.2\%,
+respectively.}
+
+%% \subsection{Implemtation}
+
+%% Although we have no unused data, 
+%% we can perform a sanity check on the ML models by checking the predicted values against the actual 
+%% {\tt Target\_ml} flags. This will also give a feel of how the client would utilise the models.
+
+%% After saving the SVC and kNN models which use the top seven kNN features ({\tt top7.py}),
+%% we return to the data, where we select a number of suspect and
+%% non-suspect players at random from the 1752 of each available.
+%% We then remove the target ({\tt Target\_ml} flag) and, upon scaling the
+%% remaining features, predict whether the players are suspect or not ({\tt ML\_predictions.py}).
+
+%% For this we use the SVC and kNN algorithms, with only the final seven features (Sect.~\ref{fi})\footnote{For the sake of space, we have renamed {\tt CountPaymentMethod} as  {\tt CPM} and {\tt Is_Retail} as
+%% {\tt IR}.}. We add the predictions ({\tt SVC, kNN}) and return {\tt Target\_ml} to the
+%% dataframe. In order to compare the predictions with the  {\tt Target\_ml} flags, 
+%% we  sum the absolute difference for each [e.g. {\tt d\_SVC = abs(Target\_ml - SVC)}] giving the total
+%% number of incorrect predictions.
+
+%% Applying the model to the dataset as a whole, we obtain
+%% {\color{blue}
+%% \footnotesize
+%% \begin{verbatim}
+%%          e_23456  e_64645   e_43568  CPM  IR   e_11234   e_34454  SVC  kNN  Target_ml  d_SVC  d_kNN
+%% 0         986.36     0.40    662.98    1   1   5599.89    283.05    0    0          0      0      0
+%% 1       17181.08     3.22  38635.13    1   0   9669.93  20905.39    0    0          0      0      0
+%% 2        3036.08     1.11    180.38    1   1  12835.48   4729.43    0    0          0      0      0
+%% 3        1764.97     0.38   6059.89    1   1   1452.38  10649.72    0    0          0      0      0
+%% 4        1963.98     0.89   5180.09    1   1   6301.98  12770.14    0    0          0      0      0
+%% ...          ...      ...       ...  ...  ..       ...       ...  ...  ...        ...    ...    ...
+%% 207393   4228.40     1.35   6142.00    2   0   1431.52    858.00    1    1          0      1      1
+%% 207394   1877.56     0.25     14.89    2   0   8782.55   2613.07    0    1          0      0      1
+%% 207395   5786.43     1.66  36966.07    2   0   8628.77  15898.21    1    0          0      1      0
+%% 207396  16485.09     3.15  37475.16    1   0   7522.49  37475.16    0    0          0      0      0
+%% 207397   3589.55     1.22  31473.88    1   0   9229.69    578.35    0    0          0      0      0
+
+%% [207398 rows x 12 columns]
+
+%% SVC: 26816 incorrect out of 207398, giving 87% accuracy
+%% kNN: 20035 incorrect out of 207398, giving 90% accuracy
+%% \end{verbatim}
+%% \normalsize
+%% }
+%% These scores are higher than quoted above, but due to the small number of suspect players we cannot avoid
+%% contaminatign these data with the training sample.\footnote{The full results are given in {\tt ML\_predictions.csv}}
+
+%% CAN'T AVOID HAVING TRAINING DATA IN 
+
+%% JUST SHOW THE TARGET ML =1 RESULTS? 
+
+%\subsection{Future Prospects}
+
+Lastly, we note that the sample is small, being trained on just $2\times1752$ players.  Increasing
+the sample size is expected to increase the accuracy and, in order to investigate this, using {\tt
+  ML\_sampled.py}, we show the mean scores from 100 trials for each of the algorithms, with the top
+seven kNN features for randomly selected samples of varying size.\footnote{Plotted with {\tt
+  sampled\_plot.py}}
+
+\includegraphics[angle=0,scale=0.65]{media/sampled_plot.eps}
+
+This suggests that the accuracy does not increase significantly for sample sizes above
+1000 suspect and 1000 non-suspect players, although the spread in the scores narrows and the
+DTC classifier is trending strongly upwards.  In any case, a significant increase in accuracy cannot be
+ruled out until much larger datasets are used for the training.
+
+ \end{document}
+
