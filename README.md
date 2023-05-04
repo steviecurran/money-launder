@@ -5,14 +5,7 @@ The assignment is to build a quick model to demonstrate to the CEO of an online 
 the potential of machine learning in detecting  money laundering by customers. The CEO wants
 a basic demonstration  model within a week.
 
-They have supplied the datasets:
-
-details.csv – the 207,398 players’ basic details. The file is known to have formatting issues.
-
-payments.csv – the payment activities of the players over the last 30 days.
-
-profiling.csv – additional information regarding the players’ activity over the same period.   
-
-suspect.csv – a list of 1753 players already flagged for suspect activity.
 
 The analysis is summarised in report.pdf
+
+Although all of the processing was done in the python scripts mentioned in the report, a simplified run-through is included as the Jupyter notebook PP+ML.ipynb
