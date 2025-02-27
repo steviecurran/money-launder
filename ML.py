@@ -1,6 +1,8 @@
-#!/usr/local/bin/python3
+#!/usr/bin/python3
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression 
@@ -62,23 +64,61 @@ X_test = sc.fit_transform(X_test)
 
 classifiers = {
     "LR": LogisticRegression(C=0.08858667, solver='newton-cg'),
-    "KNN": KNeighborsClassifier(n_neighbors=n_neighbors),
-    "SVC": SVC(C=1, gamma=0.1),
-    "DTR": DecisionTreeClassifier(max_depth = max_depth),
-}
+    #"Knn": KNeighborsClassifier(n_neighbors=n_neighbors),
+    #"DTC": DecisionTreeClassifier(max_depth = max_depth),
+    #"SVC": SVC(C=1, gamma=0.1,probability=True) # True for CalibrationDisplay
+    }
+
 
 for key, classifier in classifiers.items():
-    classifier.fit(X_train, y_train)
+    clf = classifier.fit(X_train, y_train)
     training_score = cross_val_score(classifier, X_train, y_train, cv=cv) 
-    print("For a %1.1f test fraction (%d train & %d test) %s training score = %1.3f percent" %(test_frac, len(X_train), len(X_test), key, training_score.mean()*100))
+    print("For a %1.1f test fraction (%d train & %d test) %s training score = %1.3f percent"
+          %(test_frac, len(X_train), len(X_test), key, training_score.mean()*100))
 
     predictions = classifier.predict(X_test); print('Testing\n', confusion_matrix(predictions, y_test))
     TN, FP, FN, TP = confusion_matrix(y_test, predictions).ravel()
     #print('True Positive(TP)  = ', TP); print('False Positive(FP) = ', FP); print('True Negative(TN)  = ', TN); print('False Negative(FN) = ', FN)
-
+    
     print('Validation accuracy of %s is %1.2f percent' %(key, 100*(TP + TN)/(TP + FP + TN + FN)))
 
+    #### CALIBRATION PLOTS ######
+    from sklearn.calibration import CalibrationDisplay
+    nbins= 20
+    strat='quantile'
+    #strat = 'uniform'
+    font = 12
 
+    plt.rcParams.update({'font.size': font})
+    fig, ax1 = plt.subplots(figsize = (6, 4))
+    #ax2 = fig.add_axes([0.55, 0.2, 0.35, 0.3]) # INSET left, bottom, width, height
+    ax2 = fig.add_axes([0.15, 0.6, 0.35, 0.3])
+    ax2.yaxis.set_label_position("right"); ax2.yaxis.tick_right()
+    plt.setp(ax1.spines.values(),linewidth=2)
+    plt.setp(ax2.spines.values(),linewidth=2)
+    ax1.tick_params(direction='in', pad = 5,length=6, width=1.5, which='major')
+    ax1.tick_params(direction='in', pad = 5,length=3, width=1.5, which='minor')
+    ax2.tick_params(axis='both', which='major', labelsize=0.8*font)
+    
+    disp = CalibrationDisplay.from_estimator(clf,X_test,y_test,n_bins=nbins,strategy=strat,
+                                             pos_label=None, color='r', name=key, ref_line=True,
+                                             ax=ax1,zorder = 2, label = r"%s, $n = %d$" %(key,len(X_test)))
+
+    ax2.hist(disp.y_prob,range=(0,1),bins=nbins,label=key, color="silver", edgecolor='k',lw=2,zorder=1,alpha=0.7)
+    #ax2.set_xlabel(r'Mean predicted probability', size=0.8*font);
+    ax2.set_ylabel(r'Number',size=0.8*font)
+    
+    #print(disp.y_prob); print(disp.prob_pred); print(disp.prob_true)
+    diff2  = (disp.prob_pred - disp.prob_true)**2; 
+    diff2_sum = diff2.sum(); print(diff2_sum)
+    ax1.plot([], [], ' ', label=r"$\chi^2/n_{\rm bins} = %1.3f$" %(diff2_sum/(nbins)))# Extra label on the legend
+    ax1.legend(fontsize = font,loc='lower right',labelcolor='k')
+
+    plt.tight_layout()
+    outfile = 'cal_display_%s-nbins=%d.eps' %(key,nbins)
+    #plt.savefig(outfile, format = 'eps'); print('Written to %s' %(outfile))
+    plt.show()
+    
     #FEATURE IMPORTANCE #########
     # from sklearn.inspection import permutation_importance
     # results = permutation_importance(classifier, X_train, y_train, scoring='accuracy')
