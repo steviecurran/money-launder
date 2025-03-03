@@ -8,7 +8,7 @@ The analysis is summarised in [report.pdf](https://github.com/steviecurran/money
 were we find 80% for the machine learning models. Given the small sample (1752 suspect players), we find tha
 deep learning (artifical neural networks) are not suited to this task.
 
-![](https://raw.githubusercontent.com/steviecurran/money-launder/refs/heads/main/calibration_plots.png)
+![](https://raw.githubusercontent.com/steviecurran/money-launder/refs/heads/main/accuracy.png)
 
 
 Although all of the processing was done in the python scripts mentioned in the report, a simplified run-through is included as the Jupyter notebook PP+ML.ipynb
